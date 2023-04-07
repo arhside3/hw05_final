@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% load cache %}
+
+{% block title %}Последние обновления на сайте{% endblock %}
+ 
+
+{% block content %}
+  {% include 'posts/includes/switcher.html' %}
+  {% for post in page_obj %}
+    {% if post.group %}
+ 
+      <a href='{% url "posts:group_posts" post.group.slug %}'>#{{ post.group.title }}</a>
+    {% endif %}
+ 
+    {% if not forloop.last %}<hr>{% endif %}
+  {% endfor %}
+  <div class="d-flex justify-content-center">
+    {% include 'includes/paginator.html' %}
+  </div>
+{% endblock %}

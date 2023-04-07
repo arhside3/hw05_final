@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% load cache %}
+{% load thumbnail %}
+{% block title %}
+  Последние обновления на сайте
+{% endblock title %}
+{% block content %}
+  <div class="container py-5">
+    <h1>Последние обновления на сайте</h1>
+    {% include 'posts/includes/switcher.html' %}
+    {% cache 20 index_page page_obj %}
+    {% for post in page_obj %}
+      {% include "posts/includes/post.html" with grouplink=True %}
+      {% if grouplink %}
+        <a href='{% url "posts:group_posts" post.group.slug %}'>#{{ post.group.title }}</a>
+      {% endif %}
+      {% if not forloop.last %}<hr>{% endif %}
+    {% endfor %}
+  {% endcache %}
+</div>
+{% include "includes/paginator.html" %}
+{% endblock content %}

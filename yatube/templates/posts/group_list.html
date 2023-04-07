@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% load thumbnail %}
+{% block title %}
+  {{ group.title }}
+{% endblock title %}
+{% block content %}
+  <p>
+    <h1>{{ group.title }}</h1>
+  </p>
+  <p>{{ group.description|linebreaks }}</p>
+  {% for post in posts %}
+    {% include "posts/includes/post.html" %}
+    {% if not forloop.last %}<hr>{% endif %}
+  {% endfor %}
+{% endblock content %}
