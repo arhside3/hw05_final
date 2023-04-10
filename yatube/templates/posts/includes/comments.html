@@ -22,7 +22,7 @@
           {{ comment.author.username }}
         </a>
       </h5>
-      <p>{{ comment.text }}</p>
+      <p>{{ comment.text|linebreaks }}</p>
     </div>
   </div>
 {% endfor %}

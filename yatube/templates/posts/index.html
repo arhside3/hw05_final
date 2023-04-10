@@ -7,13 +7,10 @@
 {% block content %}
   <div class="container py-5">
     <h1>Последние обновления на сайте</h1>
-    {% include 'posts/includes/switcher.html' %}
+    {% include 'posts/includes/switcher.html' with all=True %}
     {% cache 20 index_page page_obj %}
     {% for post in page_obj %}
-      {% include "posts/includes/post.html" with grouplink=True %}
-      {% if grouplink %}
-        <a href='{% url "posts:group_posts" post.group.slug %}'>#{{ post.group.title }}</a>
-      {% endif %}
+      {% include "posts/includes/post.html" %}
       {% if not forloop.last %}<hr>{% endif %}
     {% endfor %}
   {% endcache %}

@@ -6,7 +6,7 @@ from posts.forms import CommentForm, PostForm
 from posts.models import Follow, Group, Post, User
 
 
-def group_posts(request: str, slug: str) -> None:
+def group_posts(request, slug: str) -> None:
     group = get_object_or_404(Group, slug=slug)
     return render(
         request,
@@ -18,7 +18,7 @@ def group_posts(request: str, slug: str) -> None:
     )
 
 
-def index(request: str) -> None:
+def index(request) -> None:
     return render(
         request,
         'posts/index.html',
@@ -30,7 +30,7 @@ def index(request: str) -> None:
     )
 
 
-def profile(request: str, username: str) -> None:
+def profile(request, username: str) -> None:
     author = get_object_or_404(User, username=username)
     return render(
         request,
@@ -40,32 +40,31 @@ def profile(request: str, username: str) -> None:
             'page_obj': paginate(
                 request, author.posts.select_related('group', 'author')
             ),
+            'following': Follow.objects.select_related('user', 'author'),
         },
     )
 
 
-def post_detail(request: str, pk: int):
+def post_detail(request, pk: int):
     post = get_object_or_404(
         Post.objects.select_related('author', 'group'), pk=pk
     )
-    comment_list = post.comments.all().select_related('author')
+    comments = post.comments.all().select_related('author')
     form = CommentForm(request.POST or None)
-    author = request.user.pk == post.author.pk
     return render(
         request,
         'posts/post_detail.html',
         {
             'post': post,
-            'author': author,
             'form': form,
-            'comments': comment_list,
+            'comments': comments,
         },
     )
 
 
 @login_required
-def create_post(request: str):
-    form = PostForm(request.POST or None)
+def create_post(request):
+    form = PostForm(request.POST or None, files=request.FILES or None)
     if not form.is_valid():
         return render(request, 'posts/create_post.html', {'form': form})
 
@@ -75,7 +74,7 @@ def create_post(request: str):
 
 
 @login_required
-def post_edit(request: str, pk: int):
+def post_edit(request, pk: int):
     post = get_object_or_404(Post, pk=pk)
     if post.author != request.user:
         return redirect('posts:post_detail', pk)
@@ -132,6 +131,7 @@ def profile_follow(request, username):
 
 @login_required
 def profile_unfollow(request, username):
-    author = get_object_or_404(User, username=username)
-    Follow.objects.filter(user=request.user, author=author).delete()
+    get_object_or_404(
+        Follow, user=request.user, author__username=username
+    ).delete()
     return redirect('posts:profile', username=username)

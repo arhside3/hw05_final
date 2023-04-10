@@ -1,8 +1,12 @@
 from django.contrib.auth import get_user_model
+from django.core.exceptions import ValidationError
 from django.db import models
+
+from yatube.settings import UPLOAD_TO
 
 User = get_user_model()
 TEXT_SIZE = 15
+MY_FOLLOW = '{} подписан на {}'
 
 
 class Group(models.Model):
@@ -46,7 +50,7 @@ class Post(models.Model):
     )
     image = models.ImageField(
         'Картинка',
-        upload_to='posts/',
+        upload_to=UPLOAD_TO,
         blank=True,
     )
 
@@ -81,11 +85,12 @@ class Comment(models.Model):
     )
 
     class Meta:
+        ordering = ('-created',)
         verbose_name = 'комментарий'
         verbose_name_plural = 'комментарии'
 
     def __str__(self) -> str:
-        return self.text
+        return self.text[:TEXT_SIZE]
 
 
 class Follow(models.Model):
@@ -93,14 +98,25 @@ class Follow(models.Model):
         User,
         on_delete=models.CASCADE,
         related_name='follower',
-        verbose_name='Подписчик',
+        verbose_name='подписчик',
     )
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
         related_name='following',
-        verbose_name='Блогер',
+        verbose_name='блогер',
     )
 
+    def clean(self):
+        if self.user == self.author:
+            raise ValidationError("Подписка на себя недопустима")
+
+        if Follow.objects.filter(user=self.user, author=self.author).exists():
+            raise ValidationError("Повторная подписка недопустима")
+
+    class Meta:
+        verbose_name = 'подписка'
+        verbose_name_plural = 'подписки'
+
     def __str__(self):
-        return str(f'{self.user} подписан на {self.author}')
+        return MY_FOLLOW.format(self.user.username, self.author.username)

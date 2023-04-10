@@ -5,16 +5,12 @@
  
 
 {% block content %}
-  {% include 'posts/includes/switcher.html' %}
+  {% include 'posts/includes/switcher.html' with all=True %}
   {% for post in page_obj %}
     {% if post.group %}
- 
-      <a href='{% url "posts:group_posts" post.group.slug %}'>#{{ post.group.title }}</a>
+      {% include 'posts/includes/post.html' %}
     {% endif %}
  
     {% if not forloop.last %}<hr>{% endif %}
   {% endfor %}
-  <div class="d-flex justify-content-center">
-    {% include 'includes/paginator.html' %}
-  </div>
 {% endblock %}
