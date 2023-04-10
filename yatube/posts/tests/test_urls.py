@@ -43,13 +43,11 @@ class StaticURLTests(TestCase):
         )
         cls.EDIT_URL = reverse('posts:update_post', kwargs={'pk': cls.post.pk})
         cls.REDIRECT_EDIT_URL = f'{LOGIN_URL}?next={cls.EDIT_URL}'
-
-    def setUp(self):
-        self.guest = Client()
-        self.author = Client()
-        self.author.force_login(self.user)
-        self.another = Client()
-        self.another.force_login(self.another_user)
+        cls.guest = Client()
+        cls.author = Client()
+        cls.author.force_login(cls.user)
+        cls.another = Client()
+        cls.another.force_login(cls.another_user)
 
     def test_urls_uses_correct_template(self):
         """URL-адрес использует соответствующий шаблон."""
@@ -77,6 +75,11 @@ class StaticURLTests(TestCase):
             (CREATE_URL, self.author, 'OK'),
             (self.EDIT_URL, self.author, 'OK'),
             (self.EDIT_URL, self.another, 'FOUND'),
+            (FOLLOW_INDEX_URL, self.guest, 'FOUND'),
+            (FOLLOW_INDEX_URL, self.author, 'OK'),
+            (FOLLOW_INDEX_URL, self.another, 'OK'),
+            (FOLLOW_URL, self.guest, 'FOUND'),
+            (UNFOLLOW_URL, self.guest, 'FOUND'),
             ('/ggwp/', self.guest, 'NOT_FOUND'),
         ]
         for url, client, status in url_data:

@@ -17,6 +17,7 @@ ANOTHER_USERNAME = 'another user'
 PROFILE_URL = reverse('posts:profile', args={USERNAME})
 LOGIN_URL = reverse('users:login')
 REDIRECT_URL = f'{LOGIN_URL}?next={CREATE_URL}'
+IMAGE_FORM_DATA = '{}{}'
 
 TEMP_MEDIA_ROOT = tempfile.mkdtemp(dir=settings.BASE_DIR)
 small_gif = (
@@ -99,7 +100,9 @@ class PostFormTests(TestCase):
         self.assertEqual(post.text, form_data['text'])
         self.assertEqual(post.author, self.post_author)
         self.assertEqual(self.post.group.pk, form_data['group'])
-        self.assertEqual(post.image, f'{UPLOAD_TO}small.gif')
+        self.assertEqual(
+            post.image, IMAGE_FORM_DATA.format(UPLOAD_TO, form_data['image'])
+        )
 
     def test_nonauthorized_user_create_post(self):
         """Проверка создания записи не авторизированным пользователем."""
@@ -149,7 +152,6 @@ class PostFormTests(TestCase):
         self.assertRedirects(response, self.POST_DETAIL_URL)
 
     def test_nonauthorized_user_edit_post(self):
-        Post.objects.all().delete()
         uploaded = SimpleUploadedFile(
             name='smaller.gif', content=small_gif, content_type='image/gif'
         )
@@ -158,14 +160,18 @@ class PostFormTests(TestCase):
             'group': self.another_group.pk,
             'image': uploaded,
         }
-        response = self.nonauthorized_user.post(
-            self.UPDATE_URL,
-            data=form_data,
-            follow=True,
-        )
-        self.assertRedirects(response, self.REDIRECT_UPDATE_URL)
+        clients = [
+            self.nonauthorized_user,
+            self.another_client,
+        ]
+        for client in clients:
+            response = client.post(
+                self.UPDATE_URL,
+                data=form_data,
+                follow=True,
+            )
         self.assertEqual(response.status_code, HTTPStatus.OK)
-        self.assertEqual(Post.objects.count(), 0)
+        self.assertEqual(Post.objects.count(), 1)
 
     def test_forms_show_correct(self):
         """Проверка корректности формы."""
@@ -193,11 +199,12 @@ class PostFormTests(TestCase):
         response = self.authorized_user.post(
             self.CREATE_COMMENT_URL, data=form_data, follow=True
         )
-        comment = Comment.objects.first()
         self.assertEqual(Comment.objects.count(), 1)
+        comment = Comment.objects.first()
         self.assertRedirects(response, self.POST_DETAIL_URL)
         self.assertEqual(comment.text, form_data.get('text'))
         self.assertEqual(comment.author, self.post_author)
+        self.assertEqual(comment.post, self.post)
 
     def test_nonauthorized_create_comment(self):
         Comment.objects.all().delete()

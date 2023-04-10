@@ -5,11 +5,9 @@
  
 
 {% block content %}
-  {% include 'posts/includes/switcher.html' with all=True %}
+  {% include 'posts/includes/switcher.html' with follow=True %}
   {% for post in page_obj %}
-    {% if post.group %}
-      {% include 'posts/includes/post.html' %}
-    {% endif %}
+    {% include 'posts/includes/post.html' %}
  
     {% if not forloop.last %}<hr>{% endif %}
   {% endfor %}

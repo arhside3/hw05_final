@@ -49,7 +49,7 @@ class Post(models.Model):
         verbose_name='автор',
     )
     image = models.ImageField(
-        'Картинка',
+        verbose_name='картинка',
         upload_to=UPLOAD_TO,
         blank=True,
     )
@@ -107,16 +107,18 @@ class Follow(models.Model):
         verbose_name='блогер',
     )
 
-    def clean(self):
-        if self.user == self.author:
-            raise ValidationError("Подписка на себя недопустима")
-
-        if Follow.objects.filter(user=self.user, author=self.author).exists():
-            raise ValidationError("Повторная подписка недопустима")
-
     class Meta:
         verbose_name = 'подписка'
         verbose_name_plural = 'подписки'
+        constraints = [
+            models.CheckConstraint(
+                check=~models.Q(user=models.F('author')),
+                name='user_author_check',
+            ),
+            models.UniqueConstraint(
+                fields=['user', 'author'], name='unique_following'
+            ),
+        ]
 
     def __str__(self):
         return MY_FOLLOW.format(self.user.username, self.author.username)

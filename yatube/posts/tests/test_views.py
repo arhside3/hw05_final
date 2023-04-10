@@ -31,6 +31,14 @@ PROFILE_UNFOLLOW_URL = reverse(
 )
 FOLLOW_INDEX_URL = reverse('posts:follow_index')
 TEMP_MEDIA_ROOT = tempfile.mkdtemp(dir=settings.BASE_DIR)
+small_gif = (
+    b'\x47\x49\x46\x38\x39\x61\x02\x00'
+    b'\x01\x00\x80\x00\x00\x00\x00\x00'
+    b'\xFF\xFF\xFF\x21\xF9\x04\x00\x00'
+    b'\x00\x00\x00\x2C\x00\x00\x00\x00'
+    b'\x02\x00\x01\x00\x00\x02\x02\x0C'
+    b'\x0A\x00\x3B'
+)
 
 
 @override_settings(MEDIA_ROOT=TEMP_MEDIA_ROOT)
@@ -50,14 +58,6 @@ class PostPagesTests(TestCase):
         cls.another_group = Group.objects.create(
             title="Тестовая групаа_2",
             slug=ANOTHER_SLUG,
-        )
-        small_gif = (
-            b'\x47\x49\x46\x38\x39\x61\x02\x00'
-            b'\x01\x00\x80\x00\x00\x00\x00\x00'
-            b'\xFF\xFF\xFF\x21\xF9\x04\x00\x00'
-            b'\x00\x00\x00\x2C\x00\x00\x00\x00'
-            b'\x02\x00\x01\x00\x00\x02\x02\x0C'
-            b'\x0A\x00\x3B'
         )
         uploaded = SimpleUploadedFile(
             name='small.gif', content=small_gif, content_type='image/gif'
@@ -99,10 +99,9 @@ class PostPagesTests(TestCase):
 
     def test_groups_page_show_correct_context(self):
         """Шаблон group_list.html сформирован с правильным контекстом."""
-        page_obj = self.authorized_client.get(GROUP_POSTS_URL).context[
-            'page_obj'
-        ]
-        group = self.authorized_client.get(GROUP_POSTS_URL).context['group']
+        response = self.authorized_client.get(GROUP_POSTS_URL)
+        page_obj = response.context['page_obj']
+        group = response.context['group']
         self.assertEqual(len(page_obj), 1)
         self.check_post_info(page_obj[0])
         self.assertEqual(group, self.group)
@@ -124,11 +123,8 @@ class PostPagesTests(TestCase):
 
     def test_detail_page_show_correct_context(self):
         """Шаблон post_detail.html сформирован с правильным контекстом."""
-        page_obj = self.authorized_client.get(self.POST_DETAIL_URL).context[
-            'post'
-        ]
         self.check_post_info(
-            page_obj,
+            self.authorized_client.get(self.POST_DETAIL_URL).context['post']
         )
 
     def test_post_not_in_wrong_page(self):
@@ -180,7 +176,7 @@ class PaginatorViewsTest(TestCase):
     def setUpClass(cls):
         super().setUpClass()
         cls.user = User.objects.create(
-            username='auth',
+            username=USERNAME,
         )
         cls.another_user = User.objects.create_user(
             username='ANOTHER_USERNAME'
