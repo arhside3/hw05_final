@@ -1,6 +1,14 @@
 from django.test import TestCase
 
-from posts.models import MY_FOLLOW, TEXT_SIZE, Comment, Follow, Group, Post, User
+from posts.models import (
+    MY_FOLLOW,
+    TEXT_SIZE,
+    Comment,
+    Follow,
+    Group,
+    Post,
+    User,
+)
 
 
 class PostModelTest(TestCase):
