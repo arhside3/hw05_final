@@ -45,5 +45,5 @@ class PostModelTest(TestCase):
         ]
 
         for model, text in models_str:
-            with self.subTest(model=type(self).__class__.__name__):
+            with self.subTest(model=type(self).__name__):
                 self.assertEqual(str(model), text)
