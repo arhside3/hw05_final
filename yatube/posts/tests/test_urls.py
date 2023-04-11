@@ -79,7 +79,11 @@ class StaticURLTests(TestCase):
             (FOLLOW_INDEX_URL, self.author, 'OK'),
             (FOLLOW_INDEX_URL, self.another, 'OK'),
             (FOLLOW_URL, self.guest, 'FOUND'),
+            (FOLLOW_URL, self.another, 'FOUND'),
+            (FOLLOW_URL, self.author, 'FOUND'),
             (UNFOLLOW_URL, self.guest, 'FOUND'),
+            (UNFOLLOW_URL, self.another, 'FOUND'),
+            (UNFOLLOW_URL, self.author, 'NOT_FOUND'),
             ('/ggwp/', self.guest, 'NOT_FOUND'),
         ]
         for url, client, status in url_data:

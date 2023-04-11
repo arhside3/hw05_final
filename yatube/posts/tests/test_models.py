@@ -1,14 +1,6 @@
 from django.test import TestCase
 
-from posts.models import (
-    MY_FOLLOW,
-    TEXT_SIZE,
-    Comment,
-    Follow,
-    Group,
-    Post,
-    User,
-)
+from posts.models import MY_FOLLOW, TEXT_SIZE, Comment, Follow, Group, Post, User
 
 
 class PostModelTest(TestCase):
@@ -45,5 +37,5 @@ class PostModelTest(TestCase):
         ]
 
         for model, text in models_str:
-            with self.subTest(model=model.__class__.__name__):
+            with self.subTest(model=type(self).__class__.__name__):
                 self.assertEqual(str(model), text)

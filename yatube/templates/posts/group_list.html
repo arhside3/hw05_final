@@ -9,7 +9,7 @@
   </p>
   <p>{{ group.description|linebreaks }}</p>
   {% for post in posts %}
-    {% include "posts/includes/post.html" %}
+    {% include "posts/includes/post.html"  with hide_group_link=True %}
     {% if not forloop.last %}<hr>{% endif %}
   {% endfor %}
 {% endblock content %}

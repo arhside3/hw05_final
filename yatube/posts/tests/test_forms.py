@@ -17,7 +17,6 @@ ANOTHER_USERNAME = 'another user'
 PROFILE_URL = reverse('posts:profile', args={USERNAME})
 LOGIN_URL = reverse('users:login')
 REDIRECT_URL = f'{LOGIN_URL}?next={CREATE_URL}'
-IMAGE_FORM_DATA = '{}{}'
 
 TEMP_MEDIA_ROOT = tempfile.mkdtemp(dir=settings.BASE_DIR)
 small_gif = (
@@ -100,9 +99,7 @@ class PostFormTests(TestCase):
         self.assertEqual(post.text, form_data['text'])
         self.assertEqual(post.author, self.post_author)
         self.assertEqual(self.post.group.pk, form_data['group'])
-        self.assertEqual(
-            post.image, IMAGE_FORM_DATA.format(UPLOAD_TO, form_data['image'])
-        )
+        self.assertEqual(post.image, f"{UPLOAD_TO}{form_data['image']}")
 
     def test_nonauthorized_user_create_post(self):
         """Проверка создания записи не авторизированным пользователем."""
@@ -144,14 +141,15 @@ class PostFormTests(TestCase):
         self.assertEqual(post.text, form_data['text'])
         self.assertEqual(post.author, old_author)
         self.assertEqual(post.group.pk, form_data['group'])
-        self.assertEqual(post.image, f'{UPLOAD_TO}smaller.gif')
+        self.assertEqual(post.image, f"{UPLOAD_TO}{form_data['image']}")
         self.assertEqual(
             self.authorized_user.get(self.POST_DETAIL_URL).status_code,
             HTTPStatus.OK,
         )
         self.assertRedirects(response, self.POST_DETAIL_URL)
 
-    def test_nonauthorized_user_edit_post(self):
+    def test_nonauthorized_guest_user_edit_post(self):
+        posts_count = Post.objects.count()
         uploaded = SimpleUploadedFile(
             name='smaller.gif', content=small_gif, content_type='image/gif'
         )
@@ -161,17 +159,23 @@ class PostFormTests(TestCase):
             'image': uploaded,
         }
         clients = [
-            self.nonauthorized_user,
-            self.another_client,
+            (self.nonauthorized_user, self.REDIRECT_UPDATE_URL),
+            (self.another_client, self.POST_DETAIL_URL),
         ]
-        for client in clients:
+        for client, redirect_url in clients:
             response = client.post(
                 self.UPDATE_URL,
                 data=form_data,
                 follow=True,
             )
-        self.assertEqual(response.status_code, HTTPStatus.OK)
-        self.assertEqual(Post.objects.count(), 1)
+            post = Post.objects.get(pk=self.post.pk)
+            self.assertEqual(response.status_code, HTTPStatus.OK)
+            self.assertRedirects(response, redirect_url)
+            self.assertEqual(Post.objects.count(), posts_count)
+            self.assertEqual(post.text, self.post.text)
+            self.assertEqual(post.author, self.post.author)
+            self.assertEqual(post.group, self.post.group)
+            self.assertEqual(post.image, self.post.image)
 
     def test_forms_show_correct(self):
         """Проверка корректности формы."""
